@@ -1,0 +1,85 @@
+{
+  "name": "ADAPTIVE_LC",
+  "train": {
+    "type": "Dataset2D",
+    "args": {
+      "data_dir": "/ifs/loni/faculty/shi/spectrum/zdeng/MSA_Data/VesselLearning/Datasets/DRIVE/train",
+      "img_size": [584, 565],
+      "label_folder": "1st_manual",
+      "patch_size": 256,
+      "spacing": 192,
+      "use_patch": true,
+      "train": true,
+      "split_idx": 1000,
+      "augment": true
+    }
+  },
+  "valid": {
+    "type": "Dataset2D",
+    "args": {
+      "data_dir": "/ifs/loni/faculty/shi/spectrum/zdeng/MSA_Data/VesselLearning/Datasets/DRIVE/test",
+      "img_size": [584, 565],
+      "label_folder": "1st_manual",
+      "patch_size": 256,
+      "spacing": 192,
+      "use_patch": true,
+      "train": false,
+      "split_idx": 0,
+      "augment": false
+    }
+  },
+  "loader": {
+    "batch_size": 2,
+    "num_workers": 0
+  },
+  "model": {
+    "type": "LocalContrastNet2D",
+    "args": {
+      "in_ch": 1,
+      "out_ch": 2,
+      "min_scale": 0.5,
+      "max_scale": 14.5,
+      "radius_num": 256,
+      "feat_dims": [64, 128, 256, 512]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 0.001,
+      "weight_decay": 1e-5,
+      "amsgrad": true
+    }
+  },
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 50,
+      "gamma": 1.0
+    }
+  },
+  "trainer": {
+    "type": "ADAPTIVE_LC",
+    "gpu_num": 1,
+    "epoch_num": 2000,
+    "save_period": 1,
+    "resume": false,
+    "resume_path": "None",
+    "checkpoint_dir": "/ifs/loni/faculty/shi/spectrum/zdeng/MSA_Data/SpectralVessel/trained_models"
+  },
+  "loss": {
+    "loss_func": "vessel_loss",
+    "config": {
+      "flux_loss_type": "asymmetry",
+      "lambda_flux": 5,
+      "lambda_direction": 1,
+      "lambda_intensity": 1,
+      "lambda_recon": 0.2,
+      "lambda_attention": 1,
+      "flux_sample_num": 256,
+      "intensity_sample_num": 16,
+      "grad_dims": [2, 3],
+      "mean_exp": 0.0
+    }
+  }
+}
