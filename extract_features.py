@@ -52,9 +52,9 @@ def extract_features(config_file, output_folder, model_path, split='train', cuda
         _ = model(images)
         for i in range(images.size(0)):
             patch_loc = '{}-{}'.format(image_indices[i], patch_indices[i])
-            sem_output_file = os.path.join(output_folder, 'sem-{}.pt'.format(patch_loc))
-            dir_output_file = os.path.join(output_folder, 'dir-{}.pt'.format(patch_loc))
-            rad_output_file = os.path.join(output_folder, 'rad-{}.pt'.format(patch_loc))
+            sem_output_file = os.path.join(output_folder, '{}-sem-{}.pt'.format(split, patch_loc))
+            dir_output_file = os.path.join(output_folder, '{}-dir-{}.pt'.format(split, patch_loc))
+            rad_output_file = os.path.join(output_folder, '{}-rad-{}.pt'.format(split, patch_loc))
             torch.save(features['sem_feat'][i], sem_output_file)
             torch.save(features['dir_feat'][i], dir_output_file)
             torch.save(features['sem_feat'][i], rad_output_file)
@@ -67,7 +67,7 @@ parser.add_argument('-s', '--split', type=str, default='train')
 parser.add_argument('-g', '--gpu', type=bool, default=True)
 parser.add_argument('-p', '--model_path', type=str, default='/ifs/loni/faculty/shi/spectrum/zdeng/MSA_Data/' +
                                                             'SpectralVessel/trained_models/ADAPTIVE_LC/2023-06-08/' +
-                                                            'ADAPTIVE_LC-149-epoch-2023-06-08.pt')
+                                                            'ADAPTIVE_LC-200-epoch-2023-06-08.pt')
 
 
 if __name__ == '__main__':

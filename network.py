@@ -108,7 +108,7 @@ class OutConv(nn.Module):
     def __init__(self, in_ch, mid_ch, out_ch, size=3, pad=1, act=nn.ELU()):
         super(OutConv, self).__init__()
         self.conv1 = SingleConv2d(in_ch, mid_ch, size, pad, act)
-        self.conv2 = SingleConv2d(mid_ch, out_ch, size, pad, act)
+        self.conv2 = nn.Conv2d(mid_ch, out_ch, 1)
 
     def forward(self, x):
         x = self.conv1(x)
