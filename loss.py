@@ -21,7 +21,7 @@ def preproc_output(output):
     radius = output['radius']  # this should have shape of [B, 1, H, W, D] / [B, 1, H, W]
     vessel = F.normalize(vessel, dim=1)         # normalize the optimal dir
     # if 3D image such as CT and MRA
-    if len(vessel.size()) == 5:
+    if vessel.dim() == 5:
         vessel = vessel.permute(0, 2, 3, 4, 1)  # change to [B, H, W, D, 3]
         radius = radius.permute(0, 2, 3, 4, 1)  # change to [B, H, W, D, 1]
     else:
@@ -38,7 +38,7 @@ def get_orthogonal_basis(optimal_dir):
     :return: basis: 3D image [B, H, W, D, n(3), 3] / 2D image [B, H, W, n(2), 2]
     """
     # if 3D image such as CT and MRA
-    if len(optimal_dir.size()) == 5:
+    if optimal_dir.dim() == 5:
         c = torch.randn_like(optimal_dir, device=optimal_dir.device)
         ortho_dir_1 = torch.cross(c, optimal_dir, dim=4)
         ortho_dir_1 = ortho_dir_1 / ortho_dir_1.norm(dim=4, keepdim=True) + 1e-10
@@ -63,7 +63,7 @@ def get_sampling_vec(num_pts, estimated_r):
     :return: sampling vectors
     """
     # if 3D image such as CT and MRA
-    if len(estimated_r.size()) == 5:
+    if estimated_r.dim() == 5:
         indices = torch.arange(0, num_pts, dtype=torch.float32)
         phi = torch.arccos(1 - 2 * indices / num_pts)
         theta = torch.pi * (1 + 5 ** 0.5) * indices
@@ -99,9 +99,8 @@ def get_grid_base(gradients):
     :param gradients: [B, 2, H, W] / [B, 3, H, W, D]
     :return: grid : [B, H, W, 2] / [B, H, W, D, 3]
     """
-    shape = gradients.size()
-    b, c, h, w = shape[0], shape[1], shape[2], shape[3]
-    d = shape[4] if len(shape) == 5 else None
+    b, c, h, w = gradients.shape[:4]
+    d = gradients.shape[4] if gradients.dim() == 5 else None
     dh = torch.linspace(-1.0, 1.0, h)
     dw = torch.linspace(-1.0, 1.0, w)
     if d:
@@ -166,7 +165,7 @@ def grid_sample(image, sample_grid, permute):
     :return:  [B, H, W, 1, 2] / [B, H, W, D, 1, 3]
     """
     sampled = F.grid_sample(image, sample_grid, align_corners=True, padding_mode='border')
-    if len(image.size()) == 5:
+    if image.dim() == 5:
         if permute:
             sampled = sampled.permute(0, 2, 3, 4, 1).unsqueeze(4)
     else:
@@ -213,13 +212,13 @@ def proc_sample_dir(sample_dir_scaled, estimated_r):
     :param estimated_r: 2D image [B, H, W, 1] / 3D image [B, H, W, D, 1]
     :return: 2D image [B, H, W, 2, 2] / 3D image [B, H, W, D, 3, 3]
     """
-    if len(sample_dir_scaled.size()) == 5:
+    if sample_dir_scaled.dim() == 5:
         sample_dir_scaled = swap_order(sample_dir_scaled, [2, 1, 0], dim=-1)
     else:
         sample_dir_scaled = swap_order(sample_dir_scaled, [1, 0], dim=-1)
     sample_dir_scaled = torch.div(sample_dir_scaled, estimated_r)   # [B, H, W, 2] / [B, H, W, D, 3]
     sample_dir_scaled = sample_dir_scaled.unsqueeze(-2)             # [B, H, W, 1, 2] / [B, H, W, D, 1, 3]
-    repeat_size = torch.ones(len(sample_dir_scaled.size()), dtype=torch.int).tolist()
+    repeat_size = torch.ones(sample_dir_scaled.dim(), dtype=torch.int).tolist()
     repeat_size[-2] = sample_dir_scaled.size(-1)                    # [1, 1, 1, 2, 1] / [1, 1, 1, 1, 3, 1]
     sample_dir_scaled = sample_dir_scaled.repeat(repeat_size)       # [B, H, W, 2, 2] / [B, H, W, D, 3, 3]
     return sample_dir_scaled
@@ -293,9 +292,8 @@ def flux_loss_symmetry(image, output, sample_num, grad_dims):
     :param grad_dims: 2D image (2, 3) / 3D image (2, 3, 4)
     :return: flux response, mean flux loss
     """
-    shape = image.size()                                            # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
-    b, c, h, w = shape[0], shape[1], shape[2], shape[3]
-    d = shape[4] if len(shape) == 5 else None
+    b, c, h, w = image.shape[:4]                               # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
+    d = image.shape[4] if image.dim() == 5 else None
     # 2D image [B, H, W, 2], [B, H, W, 1] / 3D image [B, H, W, D, 3], [B, H, W, D, 1]
     optimal_dir, estimated_r = preproc_output(output)
     basis = get_orthogonal_basis(optimal_dir)                               # get the basis of the optimal directions
@@ -327,9 +325,8 @@ def flux_loss_asymmetry(image, output, sample_num, grad_dims):
     :param grad_dims: 2D image (2, 3) / 3D image (2, 3, 4)
     :return: flux response, mean flux loss
     """
-    shape = image.size()                                            # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
-    b, c, h, w = shape[0], shape[1], shape[2], shape[3]
-    d = shape[4] if len(shape) == 5 else None
+    b, c, h, w = image.shape[:4]                            # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
+    d = image.shape[4] if image.dim() == 5 else None
     # 2D image [B, H, W, 2], [B, H, W, 1] / 3D image [B, H, W, D, 3], [B, H, W, D, 1]
     optimal_dir, estimated_r = preproc_output(output)
     basis = get_orthogonal_basis(optimal_dir)                               # get the basis of the optimal directions
@@ -367,9 +364,8 @@ def continuity_loss(image, output, flux_response, sample_num):
     :param sample_num: num of sampling directions of a sphere / circle
     :return: mean direction_loss and mean intensity loss
     """
-    shape = image.size()                                            # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
-    b, c, h, w = shape[0], shape[1], shape[2], shape[3]
-    d = shape[4] if len(shape) == 5 else None
+    b, c, h, w = image.shape[:4]                                    # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
+    d = image.shape[4] if image.dim() == 5 else None
     # 2D image [B, H, W, 2], [B, H, W, 1] / 3D image [B, H, W, D, 3], [B, H, W, D, 1]
     optimal_dir, estimated_r = preproc_output(output)
     mean_rad = torch.mean(estimated_r, dim=-1).unsqueeze(-1)
@@ -462,9 +458,8 @@ def vessel_loss(image, output, loss_config):
 
 
 def calc_local_contrast(image, estimated_r, sample_num, scale_steps):
-    shape = image.size()                                            # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
-    b, c, h, w = shape[0], shape[1], shape[2], shape[3]
-    d = shape[4] if len(shape) == 5 else None
+    b, c, h, w = image.shape[:4]                                    # 2D image [B, C, H, W] / 3D image [B, C, H, W, D]
+    d = image.shape[4] if image.dim() == 5 else None
     sampling_vec = get_sampling_vec(sample_num, estimated_r)        # get sampling sphere / circle
     inside_scales = torch.linspace(0.1, 1.0, steps=scale_steps)     # multiple scales of inside
     outside_scales = torch.linspace(1.1, 2.0, steps=scale_steps)    # multiple scales of outside

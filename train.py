@@ -23,12 +23,23 @@ from torch.utils.data import DataLoader
 from torch.nn.parallel import DataParallel
 
 
+def read_json(config_file):
+    """
+    read the json file to config the training and dataset
+    :param config_file: config file path
+    :return: dictionary of config keys
+    """
+    config_file = Path(config_file)
+    with config_file.open('rt') as handle:
+        return json.load(handle, object_hook=OrderedDict)
+
+
 class Trainer(object):
     def __init__(self, configer_file):
         # current date
         self.date = date.today()
         # get whole configurations
-        self.config = self.read_json(configer_file)
+        self.config = read_json(configer_file)
         # dataloader configuration
         self.train_loader = DataLoader(self.init_attr('train', dataset), **self.config['loader'], shuffle=True)
         if self.config['valid'] is not None:
@@ -52,17 +63,6 @@ class Trainer(object):
         # resume model if specified
         if self.config['trainer']['resume']:
             self.resume_checkpoint()
-
-    @staticmethod
-    def read_json(config_file):
-        """
-        read the json file to config the training and dataset
-        :param config_file: config file path
-        :return: dictionary of config keys
-        """
-        config_file = Path(config_file)
-        with config_file.open('rt') as handle:
-            return json.load(handle, object_hook=OrderedDict)
 
     def init_attr(self, name, module, *mid_args):
         """

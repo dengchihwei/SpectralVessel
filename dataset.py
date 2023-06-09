@@ -109,6 +109,7 @@ class Dataset2D(Dataset):
         }
         if self.use_patch:
             item['start_coord'] = torch.LongTensor(start_coord)
+            item['patch_id'] = patch_idx
         return item
 
     def get_start_coord(self, patch_idx):
