@@ -66,8 +66,8 @@ parser.add_argument('-o', '--output_folder', type=str, default='../features')
 parser.add_argument('-s', '--split', type=str, default='train')
 parser.add_argument('-g', '--gpu', type=bool, default=True)
 parser.add_argument('-p', '--model_path', type=str, default='/ifs/loni/faculty/shi/spectrum/zdeng/MSA_Data/' +
-                                                            'SpectralVessel/trained_models/ADAPTIVE_LC/2023-06-08/' +
-                                                            'ADAPTIVE_LC-200-epoch-2023-06-08.pt')
+                                                            'SpectralVessel/trained_models/ADAPTIVE_LC/2023-06-09/' +
+                                                            'ADAPTIVE_LC-1000-epoch-2023-06-09.pt')
 
 
 if __name__ == '__main__':

@@ -324,7 +324,7 @@ class LocalContrastNet2D(nn.Module):
         # self.recon_conv = nn.Conv2d(feat_dims[0], in_ch, 1)
         # self.direction_conv = nn.Conv2d(feat_dims[0], out_ch, 1)
         # self.radius_conv = nn.Conv2d(feat_dims[0], radius_num, 1)
-        self.recon_conv = OutConv(feat_dims[0], 128, out_ch, size=1, pad=0)
+        self.recon_conv = OutConv(feat_dims[0], 128, in_ch, size=1, pad=0)
         self.direction_conv = OutConv(feat_dims[0], 128, out_ch, size=1, pad=0)
         self.radius_conv = OutConv(feat_dims[0], 128, radius_num, size=1, pad=0)
         Initializer.weights_init(self)

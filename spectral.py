@@ -79,12 +79,12 @@ def extract_eigs(config_file, features_folder, split='train', K=5, normalize=Tru
     start = time.time()
     config = read_json(config_file)
     # define the dataloader
-    data_loader = DataLoader(getattr(dataset, config[split]['type'])(**config[split]['args']), batch_size=1)
+    # data_loader = DataLoader(getattr(dataset, config[split]['type'])(**config[split]['args']), batch_size=1)
     # get features
     print('Retrieving the features...')
-    sem_feature = torch.load(os.path.join(features_folder, '{}-sem-0-4.pt'.format(split)), map_location='cpu')[:, :64, :64]
-    dir_feature = torch.load(os.path.join(features_folder, '{}-dir-0-4.pt'.format(split)), map_location='cpu')[:, :64, :64]
-    rad_feature = torch.load(os.path.join(features_folder, '{}-rad-0-4.pt'.format(split)), map_location='cpu')[:, :64, :64]
+    sem_feature = torch.load(os.path.join(features_folder, '{}-sem-0-50.pt'.format(split)), map_location='cpu')
+    dir_feature = torch.load(os.path.join(features_folder, '{}-dir-0-50.pt'.format(split)), map_location='cpu')
+    rad_feature = torch.load(os.path.join(features_folder, '{}-rad-0-50.pt'.format(split)), map_location='cpu')
     sem_feature = sem_feature.contiguous().view(sem_feature.size(0), -1).T
     dir_feature = dir_feature.contiguous().view(dir_feature.size(0), -1).T
     rad_feature = rad_feature.contiguous().view(rad_feature.size(0), -1).T
@@ -121,15 +121,15 @@ def extract_eigs(config_file, features_folder, split='train', K=5, normalize=Tru
         if 0.5 < torch.mean((eig_vecs[k] > 0).float()).item() < 1.0:  # reverse segment
             eig_vecs[k] = 0 - eig_vecs[k]
     print(eig_vecs.size(), eig_vals.size())
+    print(time.time() - start)
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--config_file', type=str, default='./configs/drive/adaptive_lc.json')
-parser.add_argument('-f', '--feature_folder', type=str, default='../features/2023-06-08/ADAPTIVE_LC')
+parser.add_argument('-f', '--feature_folder', type=str, default='../features/2023-06-13/ADAPTIVE_LC')
 
 
 if __name__ == '__main__':
     torch.set_grad_enabled(False)
     args = parser.parse_args()
     extract_eigs(args.config_file, args.feature_folder)
-

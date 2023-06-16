@@ -17,7 +17,7 @@ from scipy.ndimage.morphology import binary_erosion
 
 class Dataset2D(Dataset):
     def __init__(self, data_dir, img_size, label_folder, patch_size=256, spacing=192,
-                 use_patch=True, train=True, split_idx=1000, augment=True,):
+                 use_patch=True, train=True, split_idx=1000, augment=False):
         """
         init the dataset object
         :param data_dir: the directory of the dataset
@@ -49,7 +49,7 @@ class Dataset2D(Dataset):
         # load images, labels and masks
         self.images, self.labels, self.masks = [], [], []
         for i in tqdm(range(len(self.image_files))):
-            image = np.asarray(Image.open(self.image_files[i]))[..., 1]
+            image = np.asarray(Image.open(self.image_files[i])) # [..., 1]
             label = np.asarray(Image.open(self.label_files[i]))
             mask = np.asarray(Image.open(self.mask_files[i]).convert('L'))
             # normalization
@@ -58,13 +58,13 @@ class Dataset2D(Dataset):
             mask = binary_erosion(mask, np.ones((7, 7)))
             # padding to image size
             target_h, target_w = img_size
-            source_h, source_w = image.shape
+            source_h, source_w = image.shape[:2]
             delta_h = target_h - source_h
             delta_w = target_w - source_w
             top, bottom = delta_h // 2, delta_h - (delta_h // 2)
             left, right = delta_w // 2, delta_w - (delta_w // 2)
             # pad the image size
-            image = np.pad(image, pad_width=[(top, bottom), (left, right)], mode='constant')
+            image = np.pad(image, pad_width=[(top, bottom), (left, right), (0, 0)], mode='constant')
             label = np.pad(label, pad_width=[(top, bottom), (left, right)], mode='constant')
             mask = np.pad(mask, pad_width=[(top, bottom), (left, right)], mode='constant')
             self.images.append(image)
@@ -93,7 +93,7 @@ class Dataset2D(Dataset):
         label = self.crop_image_patch(self.labels[image_idx], start_coord)
         mask = self.crop_image_patch(self.masks[image_idx], start_coord)
         # apply the image mask
-        image = np.multiply(image, mask)
+        # image = np.multiply(image, mask)
         # image augmentation
         if self.augment:
             image, label = self.flip(image, label)

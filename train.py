@@ -58,6 +58,7 @@ class Trainer(object):
         os.makedirs(log_dir, exist_ok=True)
         log_filename = os.path.join(log_dir, '{}-{}.txt'.format(self.config['trainer']['type'], str(self.date)))
         self.logger = Logger(log_filename)
+        self.logger.write_dict(self.config)
         # loss functions configuration
         self.loss_func = getattr(loss, self.config['loss']['loss_func'])
         # resume model if specified
